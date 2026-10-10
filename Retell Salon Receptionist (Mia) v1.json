@@ -1,0 +1,897 @@
+{
+  "agent_id": "",
+  "channel": "voice",
+  "last_modification_timestamp": 1791570365415,
+  "agent_name": "Salon Receptionist (Mia)",
+  "version_description": "",
+  "response_engine": {
+    "conversation_flow_id": "conversation_flow_e0ae2f400fa3",
+    "version": 1,
+    "type": "conversation-flow"
+  },
+  "language": "en-US",
+  "data_storage_setting": "everything",
+  "contact_memory_config": {
+    "enable_update": false,
+    "enable_read": true
+  },
+  "opt_in_signed_url": false,
+  "version": 1,
+  "base_version": 0,
+  "assigned_tags": [],
+  "is_published": true,
+  "version_title": "Mia AI Salon Receptionist",
+  "post_call_analysis_model": "gpt-4.1",
+  "pii_config": {
+    "categories": [],
+    "mode": "post_call"
+  },
+  "handbook_config": {
+    "ai_disclosure": true,
+    "speech_normalization": false,
+    "smart_matching": false,
+    "high_empathy": false,
+    "default_personality": false,
+    "nato_phonetic_alphabet": false,
+    "natural_filler_words": true,
+    "echo_verification": true,
+    "scope_boundaries": true,
+    "conversational_personality": true
+  },
+  "post_call_analysis_data": [
+    {
+      "choices": [
+        "Booked",
+        "Rescheduled",
+        "Cancelled",
+        "Question answered",
+        "Callback requested",
+        "Transferred to human",
+        "No action"
+      ],
+      "description": "What the call achieved.",
+      "type": "enum",
+      "name": "call_outcome"
+    },
+    {
+      "type": "string",
+      "description": "The service the caller asked about or booked, e.g. 'cut and colour'. Empty if none.",
+      "name": "service_requested"
+    },
+    {
+      "name": "appointment_datetime",
+      "description": "Appointment date and time discussed or booked, in plain words. Empty if none.",
+      "type": "string"
+    },
+    {
+      "type": "boolean",
+      "description": "True if a deposit payment link was texted to the caller.",
+      "name": "deposit_link_sent"
+    },
+    {
+      "description": "Whether the caller said they are new or returning.",
+      "type": "enum",
+      "name": "caller_type",
+      "choices": [
+        "New client",
+        "Returning client",
+        "Not stated"
+      ]
+    },
+    {
+      "description": "Overall caller sentiment.",
+      "type": "enum",
+      "name": "caller_sentiment",
+      "choices": [
+        "Positive",
+        "Neutral",
+        "Negative"
+      ]
+    }
+  ],
+  "voice_id": "retell-Della",
+  "voice_temperature": 1,
+  "voice_speed": 1,
+  "enable_dynamic_voice_speed": true,
+  "volume": 1,
+  "enable_expressive_mode": true,
+  "expressive_emotion_tags": [
+    "empathetic",
+    "happy",
+    "pause",
+    "emphasis",
+    "curious"
+  ],
+  "max_call_duration_ms": 900000,
+  "interruption_sensitivity": 0.8,
+  "allow_user_dtmf": true,
+  "user_dtmf_options": {},
+  "conversationFlow": {
+    "conversation_flow_id": "conversation_flow_e0ae2f400fa3",
+    "version": 1,
+    "last_modification_timestamp": 1791570365440,
+    "global_prompt": "## Role\nYou are {{agent_name}}, the AI receptionist for {{salon_name}}, a salon and aesthetic clinic. You answer calls, book, reschedule and cancel appointments, and answer common questions. You are warm, calm and efficient, like a great front-desk person.\n\n## Salon facts (use only these; never invent)\n- Opening hours: {{opening_hours}}\n- Services offered: {{services_list}}\n- Cancellation policy: {{cancellation_policy}}\n- Current time: {{current_time}}\n\n## Style\n- Keep replies short and spoken-friendly. One question at a time.\n- Say dates naturally (\"Tuesday the 14th at 2:30 in the afternoon\"), never ISO format.\n- Never mention tools, functions, nodes or \"the system\".\n\n## Hard rules\n- Only offer appointment times that the availability tool returned. Never guess availability.\n- Never take card numbers, CVV or any payment details by voice. Deposits are paid through a secure link sent by text.\n- Do not give medical advice or promise treatment results. For clinical or skin-condition questions, offer a consultation booking or a callback from the team.\n- Always read back the caller's phone number digit by digit before booking.\n- If you do not know something, say so and offer a callback. Do not guess prices or policies not listed above.",
+    "nodes": [
+      {
+        "name": "Greeting",
+        "type": "conversation",
+        "display_position": {
+          "y": 300,
+          "x": 400
+        },
+        "id": "greeting",
+        "edges": [
+          {
+            "destination_node_id": "collect_booking",
+            "transition_condition": {
+              "prompt": "Caller wants to book a new appointment",
+              "type": "prompt"
+            },
+            "id": "g1"
+          },
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller wants to reschedule or cancel an existing appointment"
+            },
+            "id": "g2",
+            "destination_node_id": "manage_booking"
+          },
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller has a question about services, prices, hours, location or policies"
+            },
+            "id": "g3",
+            "destination_node_id": "faq"
+          },
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller wants a callback or wants to leave a message"
+            },
+            "id": "g4",
+            "destination_node_id": "take_message"
+          }
+        ],
+        "start_speaker": "agent",
+        "skippable": false,
+        "instruction": {
+          "type": "prompt",
+          "text": "Greet the caller: \"Thank you for calling {{salon_name}}, this is {{agent_name}}, the salon's AI receptionist. How can I help you today?\" Then listen for what they need."
+        }
+      },
+      {
+        "name": "Collect Booking Details",
+        "edges": [
+          {
+            "id": "cb1",
+            "transition_condition": {
+              "prompt": "Service, day/time preference, name and confirmed phone number are all collected",
+              "type": "prompt"
+            },
+            "destination_node_id": "check_availability"
+          },
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller asks a question about the salon instead of continuing"
+            },
+            "id": "cb2",
+            "destination_node_id": "faq"
+          }
+        ],
+        "instruction": {
+          "text": "Collect, one question at a time and skipping anything already said: (1) which service, (2) preferred stylist or anyone, (3) preferred day and time of day, (4) caller's full name, (5) best phone number, then read the number back digit by digit and get a yes. If they say it is their first visit, welcome them warmly. Do not offer times yet.",
+          "type": "prompt"
+        },
+        "skippable": false,
+        "id": "collect_booking",
+        "type": "conversation",
+        "display_position": {
+          "y": 120,
+          "x": 900
+        }
+      },
+      {
+        "speak_during_execution": true,
+        "name": "Check Availability",
+        "display_position": {
+          "x": 1400,
+          "y": 120
+        },
+        "wait_for_result": true,
+        "id": "check_availability",
+        "skippable": false,
+        "edges": [
+          {
+            "id": "ca1",
+            "transition_condition": {
+              "operator": "&&",
+              "type": "equation",
+              "equations": [
+                {
+                  "operator": "==",
+                  "left": "{{slots_found}}",
+                  "right": "true"
+                }
+              ]
+            },
+            "destination_node_id": "offer_slots"
+          }
+        ],
+        "tool_type": "local",
+        "tool_id": "tool_check_availability",
+        "type": "function",
+        "instruction": {
+          "type": "prompt",
+          "text": "Say briefly that you are checking the diary, e.g. \"One moment while I check what we have.\""
+        },
+        "else_edge": {
+          "transition_condition": {
+            "prompt": "Else",
+            "type": "prompt"
+          },
+          "id": "ca2",
+          "destination_node_id": "adjust_request"
+        }
+      },
+      {
+        "id": "offer_slots",
+        "name": "Offer Slots",
+        "instruction": {
+          "text": "Offer the options from {{slot_options}} (at most three), spoken naturally. Ask which works best. Do not invent other times.",
+          "type": "prompt"
+        },
+        "edges": [
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller picks one of the offered slots"
+            },
+            "destination_node_id": "confirm_details",
+            "id": "os1"
+          },
+          {
+            "transition_condition": {
+              "prompt": "None of the offered slots work and caller wants to try another day or time",
+              "type": "prompt"
+            },
+            "id": "os2",
+            "destination_node_id": "adjust_request"
+          }
+        ],
+        "type": "conversation",
+        "display_position": {
+          "y": 120,
+          "x": 1900
+        },
+        "skippable": false
+      },
+      {
+        "edges": [
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller gives a different day, time or stylist to try"
+            },
+            "id": "ar1",
+            "destination_node_id": "check_availability"
+          },
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller prefers a callback instead"
+            },
+            "destination_node_id": "take_message",
+            "id": "ar2"
+          }
+        ],
+        "display_position": {
+          "x": 1900,
+          "y": 480
+        },
+        "type": "conversation",
+        "instruction": {
+          "type": "prompt",
+          "text": "Explain kindly that nothing suitable is open for that request, then ask what other day or time would work. If they prefer, offer to have the team call them back."
+        },
+        "skippable": false,
+        "name": "Adjust Request",
+        "id": "adjust_request"
+      },
+      {
+        "type": "conversation",
+        "edges": [
+          {
+            "id": "cd1",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller confirms the details are correct"
+            },
+            "destination_node_id": "book_appointment"
+          },
+          {
+            "destination_node_id": "collect_booking",
+            "id": "cd2",
+            "transition_condition": {
+              "prompt": "Caller wants to change something",
+              "type": "prompt"
+            }
+          }
+        ],
+        "id": "confirm_details",
+        "display_position": {
+          "y": 120,
+          "x": 2400
+        },
+        "instruction": {
+          "text": "Read back the full booking in one short sentence: service, stylist, day and time, name and phone number. Ask: \"Shall I book that in?\"",
+          "type": "prompt"
+        },
+        "name": "Confirm Details",
+        "skippable": false
+      },
+      {
+        "else_edge": {
+          "transition_condition": {
+            "prompt": "Else",
+            "type": "prompt"
+          },
+          "destination_node_id": "booking_failed",
+          "id": "ba3"
+        },
+        "name": "Book Appointment",
+        "id": "book_appointment",
+        "tool_type": "local",
+        "tool_id": "tool_book_appointment",
+        "display_position": {
+          "x": 2900,
+          "y": 120
+        },
+        "speak_during_execution": true,
+        "type": "function",
+        "skippable": false,
+        "instruction": {
+          "text": "Say you are booking it in now.",
+          "type": "prompt"
+        },
+        "wait_for_result": true,
+        "edges": [
+          {
+            "destination_node_id": "send_deposit",
+            "transition_condition": {
+              "operator": "&&",
+              "type": "equation",
+              "equations": [
+                {
+                  "right": "confirmed",
+                  "operator": "==",
+                  "left": "{{booking_status}}"
+                },
+                {
+                  "left": "{{deposit_required}}",
+                  "right": "true",
+                  "operator": "=="
+                }
+              ]
+            },
+            "id": "ba1"
+          },
+          {
+            "destination_node_id": "closing",
+            "transition_condition": {
+              "operator": "&&",
+              "equations": [
+                {
+                  "left": "{{booking_status}}",
+                  "operator": "==",
+                  "right": "confirmed"
+                }
+              ],
+              "type": "equation"
+            },
+            "id": "ba2"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "text": "Hi {{customer_name}}, thanks for booking with {{salon_name}}. Please pay your {{deposit_amount}} deposit here to secure your appointment: {{deposit_link}}",
+          "type": "static_text"
+        },
+        "failed_edge": {
+          "id": "sd2",
+          "destination_node_id": "deposit_sms_failed",
+          "transition_condition": {
+            "prompt": "Failed to send",
+            "type": "prompt"
+          }
+        },
+        "id": "send_deposit",
+        "name": "Send Deposit Link",
+        "display_position": {
+          "x": 3400,
+          "y": 120
+        },
+        "skippable": false,
+        "success_edge": {
+          "transition_condition": {
+            "prompt": "Sent successfully",
+            "type": "prompt"
+          },
+          "destination_node_id": "closing",
+          "id": "sd1"
+        },
+        "type": "sms"
+      },
+      {
+        "instruction": {
+          "text": "Apologise briefly and say the team will text the deposit link shortly to the number given. Do not mention technical details.",
+          "type": "prompt"
+        },
+        "id": "deposit_sms_failed",
+        "display_position": {
+          "x": 3400,
+          "y": 480
+        },
+        "skippable": false,
+        "skip_response_edge": {
+          "destination_node_id": "closing",
+          "id": "df1",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          }
+        },
+        "type": "conversation",
+        "name": "Deposit SMS Failed"
+      },
+      {
+        "instruction": {
+          "text": "Confirm the booking is made for {{confirmed_slot}} if one was made, mention a deposit text has been sent if it was, and remind them of the cancellation policy in one sentence. Ask if there is anything else you can help with.",
+          "type": "prompt"
+        },
+        "display_position": {
+          "x": 3900,
+          "y": 120
+        },
+        "type": "conversation",
+        "skippable": false,
+        "name": "Confirm and Close",
+        "edges": [
+          {
+            "transition_condition": {
+              "prompt": "Caller needs help with something else",
+              "type": "prompt"
+            },
+            "id": "cl1",
+            "destination_node_id": "greeting"
+          },
+          {
+            "id": "cl2",
+            "destination_node_id": "end_call",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller says that is all or says goodbye"
+            }
+          }
+        ],
+        "id": "closing"
+      },
+      {
+        "skippable": false,
+        "skip_response_edge": {
+          "destination_node_id": "take_message",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          },
+          "id": "bf1"
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Apologise and say you could not complete the booking just now. Offer to take their details so the team can confirm it by phone."
+        },
+        "type": "conversation",
+        "name": "Booking Failed",
+        "display_position": {
+          "y": 480,
+          "x": 2900
+        },
+        "id": "booking_failed"
+      },
+      {
+        "display_position": {
+          "y": 760,
+          "x": 900
+        },
+        "edges": [
+          {
+            "id": "mb1",
+            "destination_node_id": "update_booking",
+            "transition_condition": {
+              "prompt": "All details needed for the change are collected",
+              "type": "prompt"
+            }
+          }
+        ],
+        "instruction": {
+          "text": "Find out: reschedule or cancel, caller's full name, phone number on the booking (read back digit by digit), and the current appointment day/time. For a reschedule also get the new preferred day and time of day. One question at a time. Mention the cancellation policy if they are cancelling.",
+          "type": "prompt"
+        },
+        "id": "manage_booking",
+        "skippable": false,
+        "type": "conversation",
+        "name": "Reschedule or Cancel"
+      },
+      {
+        "edges": [
+          {
+            "destination_node_id": "update_done",
+            "transition_condition": {
+              "equations": [
+                {
+                  "right": "done",
+                  "left": "{{update_status}}",
+                  "operator": "=="
+                }
+              ],
+              "type": "equation",
+              "operator": "&&"
+            },
+            "id": "ub1"
+          }
+        ],
+        "else_edge": {
+          "id": "ub2",
+          "transition_condition": {
+            "prompt": "Else",
+            "type": "prompt"
+          },
+          "destination_node_id": "booking_failed"
+        },
+        "display_position": {
+          "y": 760,
+          "x": 1400
+        },
+        "id": "update_booking",
+        "name": "Update Booking",
+        "speak_during_execution": true,
+        "skippable": false,
+        "tool_id": "tool_update_booking",
+        "instruction": {
+          "text": "Say you are updating the booking now.",
+          "type": "prompt"
+        },
+        "tool_type": "local",
+        "wait_for_result": true,
+        "type": "function"
+      },
+      {
+        "display_position": {
+          "x": 1900,
+          "y": 760
+        },
+        "type": "conversation",
+        "edges": [
+          {
+            "id": "ud1",
+            "destination_node_id": "greeting",
+            "transition_condition": {
+              "prompt": "Caller needs help with something else",
+              "type": "prompt"
+            }
+          },
+          {
+            "id": "ud2",
+            "destination_node_id": "end_call",
+            "transition_condition": {
+              "prompt": "Caller says that is all",
+              "type": "prompt"
+            }
+          }
+        ],
+        "skippable": false,
+        "id": "update_done",
+        "name": "Change Confirmed",
+        "instruction": {
+          "text": "Confirm the change using {{update_detail}}. Ask if there is anything else.",
+          "type": "prompt"
+        }
+      },
+      {
+        "edges": [
+          {
+            "transition_condition": {
+              "prompt": "Caller wants to book an appointment",
+              "type": "prompt"
+            },
+            "id": "fq1",
+            "destination_node_id": "collect_booking"
+          },
+          {
+            "id": "fq2",
+            "transition_condition": {
+              "prompt": "Caller needs something you cannot answer and accepts a callback",
+              "type": "prompt"
+            },
+            "destination_node_id": "take_message"
+          },
+          {
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Caller has no more questions"
+            },
+            "destination_node_id": "end_call",
+            "id": "fq3"
+          }
+        ],
+        "display_position": {
+          "y": 1100,
+          "x": 900
+        },
+        "id": "faq",
+        "instruction": {
+          "text": "Answer the caller's question using only the salon facts in the global prompt (and the knowledge base if attached). If the answer is not available, say so and offer a callback. After answering, ask if they would like to book.",
+          "type": "prompt"
+        },
+        "name": "Answer Questions",
+        "skippable": false,
+        "type": "conversation"
+      },
+      {
+        "display_position": {
+          "y": 480,
+          "x": 2400
+        },
+        "skippable": false,
+        "skip_response_edge": {
+          "id": "tm1",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Skip response"
+          },
+          "destination_node_id": "end_call"
+        },
+        "name": "Take Callback Details",
+        "id": "take_message",
+        "type": "conversation",
+        "instruction": {
+          "type": "prompt",
+          "text": "Collect the caller's name, best phone number (read back digit by digit) and a one-line reason for the callback. Tell them the team will call back during opening hours. Thank them."
+        }
+      },
+      {
+        "transfer_destination": {
+          "type": "predefined",
+          "number": "{{transfer_number}}"
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Say you will connect them to a team member now."
+        },
+        "name": "Transfer to Team",
+        "id": "transfer_call",
+        "global_node_setting": {
+          "condition": "Caller is upset, asks for a human or a manager, or describes an urgent problem"
+        },
+        "type": "transfer_call",
+        "edge": {
+          "destination_node_id": "take_message",
+          "id": "tc1",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Transfer failed"
+          }
+        },
+        "transfer_option": {
+          "show_transferee_as_caller": true,
+          "type": "cold_transfer"
+        },
+        "speak_during_execution": true,
+        "display_position": {
+          "y": 760,
+          "x": 400
+        },
+        "skippable": false
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "Thank them for calling {{salon_name}} and say goodbye warmly."
+        },
+        "speak_during_execution": true,
+        "name": "End Call",
+        "skippable": false,
+        "id": "end_call",
+        "display_position": {
+          "x": 3900,
+          "y": 480
+        },
+        "type": "end"
+      }
+    ],
+    "start_node_id": "greeting",
+    "start_speaker": "agent",
+    "tools": [
+      {
+        "response_variables": {
+          "slots_found": "slots_found",
+          "slot_options": "slot_options"
+        },
+        "type": "custom",
+        "timeout_ms": 10000,
+        "description": "Look up open appointment slots for a service on a given date.",
+        "url": "https://your-backend.example.com/retell/check-availability",
+        "parameter_type": "form",
+        "name": "check_availability",
+        "speak_during_execution": false,
+        "method": "POST",
+        "parameters": {
+          "properties": {
+            "service": {
+              "description": "Service requested, e.g. 'women's cut'",
+              "type": "string"
+            },
+            "preferred_time": {
+              "type": "string",
+              "description": "Preferred time of day, e.g. 'morning', 'after 3pm', or empty"
+            },
+            "preferred_date": {
+              "description": "Requested date as YYYY-MM-DD, resolved from the current time",
+              "type": "string"
+            },
+            "stylist": {
+              "type": "string",
+              "description": "Preferred stylist name, or empty for anyone"
+            }
+          },
+          "required": [
+            "service",
+            "preferred_date"
+          ],
+          "type": "object"
+        },
+        "speak_after_execution": false,
+        "tool_id": "tool_check_availability",
+        "max_retry": 0,
+        "query_params": {},
+        "args_at_root": false,
+        "headers": {
+          "X-Api-Key": "REPLACE_WITH_SALON_API_KEY"
+        }
+      },
+      {
+        "timeout_ms": 10000,
+        "args_at_root": false,
+        "tool_id": "tool_book_appointment",
+        "description": "Create the appointment once the caller has confirmed every detail.",
+        "speak_after_execution": false,
+        "method": "POST",
+        "headers": {
+          "X-Api-Key": "REPLACE_WITH_SALON_API_KEY"
+        },
+        "name": "book_appointment",
+        "query_params": {},
+        "type": "custom",
+        "speak_during_execution": false,
+        "parameter_type": "form",
+        "max_retry": 0,
+        "url": "https://your-backend.example.com/retell/book",
+        "response_variables": {
+          "deposit_link": "deposit_link",
+          "confirmed_slot": "confirmed_slot",
+          "deposit_required": "deposit_required",
+          "booking_status": "booking_status",
+          "booking_id": "booking_id"
+        },
+        "parameters": {
+          "required": [
+            "customer_name",
+            "customer_phone",
+            "service",
+            "slot"
+          ],
+          "properties": {
+            "customer_name": {
+              "type": "string"
+            },
+            "customer_phone": {
+              "description": "E.164 or national format as confirmed",
+              "type": "string"
+            },
+            "service": {
+              "type": "string"
+            },
+            "stylist": {
+              "type": "string"
+            },
+            "slot": {
+              "type": "string",
+              "description": "The exact slot the caller chose, copied from the offered options"
+            }
+          },
+          "type": "object"
+        }
+      },
+      {
+        "args_at_root": false,
+        "parameters": {
+          "properties": {
+            "current_appointment": {
+              "type": "string",
+              "description": "The existing appointment date/time as the caller described it"
+            },
+            "new_preferred_time": {
+              "description": "For reschedule: preferred time of day, otherwise empty",
+              "type": "string"
+            },
+            "customer_name": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            },
+            "new_preferred_date": {
+              "description": "For reschedule: new date YYYY-MM-DD, otherwise empty",
+              "type": "string"
+            },
+            "customer_phone": {
+              "type": "string"
+            }
+          },
+          "type": "object",
+          "required": [
+            "action",
+            "customer_name",
+            "customer_phone"
+          ]
+        },
+        "description": "Reschedule or cancel an existing appointment.",
+        "name": "update_booking",
+        "speak_during_execution": false,
+        "parameter_type": "form",
+        "url": "https://your-backend.example.com/retell/update-booking",
+        "timeout_ms": 10000,
+        "tool_id": "tool_update_booking",
+        "max_retry": 0,
+        "method": "POST",
+        "headers": {
+          "X-Api-Key": "REPLACE_WITH_SALON_API_KEY"
+        },
+        "speak_after_execution": false,
+        "query_params": {},
+        "type": "custom",
+        "response_variables": {
+          "update_detail": "update_detail",
+          "update_status": "update_status"
+        }
+      }
+    ],
+    "model_choice": {
+      "model": "gpt-5.1",
+      "type": "cascading",
+      "high_priority": false
+    },
+    "default_dynamic_variables": {
+      "transfer_number": "+15555550100",
+      "agent_name": "Mia",
+      "salon_name": "Luna Hair & Beauty",
+      "cancellation_policy": "Free changes up to 24 hours before the appointment. Late cancellations may lose the deposit.",
+      "deposit_amount": "20 dollars",
+      "services_list": "women's cut, men's cut, blow dry, colour, highlights, treatments, manicure, facials",
+      "opening_hours": "Monday to Saturday, 9am to 6pm. Closed Sundays."
+    },
+    "knowledge_base_ids": [],
+    "kb_config": {
+      "top_k": 3,
+      "filter_score": 0.6
+    },
+    "begin_tag_display_position": {
+      "x": 113.5,
+      "y": 300
+    },
+    "is_published": true
+  }
+}
