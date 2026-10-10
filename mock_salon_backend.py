@@ -12,10 +12,17 @@ Then edit the three tool URLs in Retell to use https://<your-tunnel>/retell.
 import os
 from datetime import date
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 BOOKINGS = {}
 API_KEY = os.environ.get("SALON_API_KEY", "")   # set this on the server; add the same value as an X-Api-Key header on each Retell tool
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", include_in_schema=False)
+async def landing_page():
+    return FileResponse("landing.html")
 
 @app.middleware("http")
 async def require_key(request: Request, call_next):
