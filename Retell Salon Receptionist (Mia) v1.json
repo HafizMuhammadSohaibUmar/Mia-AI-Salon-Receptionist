@@ -759,7 +759,7 @@
         "query_params": {},
         "args_at_root": false,
         "headers": {
-          "X-Api-Key": "REPLACE_WITH_SALON_API_KEY"
+          "X-Api-Key": "{{your__x-_api-_key}}"
         }
       },
       {
@@ -770,7 +770,7 @@
         "speak_after_execution": false,
         "method": "POST",
         "headers": {
-          "X-Api-Key": "REPLACE_WITH_SALON_API_KEY"
+          "X-Api-Key": "{{your__x-_api-_key}}"
         },
         "name": "book_appointment",
         "query_params": {},
@@ -858,7 +858,7 @@
         "max_retry": 0,
         "method": "POST",
         "headers": {
-          "X-Api-Key": "REPLACE_WITH_SALON_API_KEY"
+          "X-Api-Key": "{{your__x-_api-_key}}"
         },
         "speak_after_execution": false,
         "query_params": {},
